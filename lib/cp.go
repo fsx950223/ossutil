@@ -10,9 +10,9 @@ import (
 	"strings"
 	"sync"
 	"time"
-
 	oss "github.com/aliyun/aliyun-oss-go-sdk/oss"
 	leveldb "github.com/syndtr/goleveldb/leveldb"
+	//"container/list"
 )
 
 type operationType int
@@ -1397,6 +1397,21 @@ func (cc *CopyCommand) uploadFiles(srcURLList []StorageURLer, destURL CloudURL) 
 			}
 		}
 	}
+	//list,err:=bucket.ListObjects()
+	//for _,file:=range list.Objects{
+	//	var flag=false
+	//	for chFile:=range chFiles{
+	//		fmt.Println(file,chFile)
+	//		if file.XMLName.Local==chFile.filePath{
+	//			flag=true
+	//			break;
+	//		}
+	//	}
+	//	if !flag{
+	//		bucket.DeleteObject(file.Key)
+	//	}
+	//}
+
 	cc.closeProgress()
 	fmt.Printf(cc.monitor.progressBar(true, normalExit))
 	return nil
@@ -1676,11 +1691,11 @@ func (cc *CopyCommand) skipUpload(spath string, bucket *oss.Bucket, objectName s
 			}
 		}
 		if cc.cpOption.update {
-			if props, err := cc.command.ossGetObjectStatRetry(bucket, objectName); err == nil {
-				destt, err := time.Parse(http.TimeFormat, props.Get(oss.HTTPHeaderLastModified))
-				if err == nil && destt.Unix() >= srct {
-					return true, nil
-				}
+			if _, err := cc.command.ossGetObjectStatRetry(bucket, objectName); err == nil {
+				//destt, err := time.Parse(http.TimeFormat, props.Get(oss.HTTPHeaderLastModified))
+				//if err == nil && destt.Unix() >= srct {
+				return true, nil
+				//}
 			}
 		}
 	} else if !cc.cpOption.force {
@@ -2349,11 +2364,11 @@ func (cc *CopyCommand) skipCopy(destURL CloudURL, destObject string, srct time.T
 	}
 
 	if cc.cpOption.update {
-		if props, err := cc.command.ossGetObjectStatRetry(destBucket, destObject); err == nil {
-			destt, err := time.Parse(http.TimeFormat, props.Get(oss.HTTPHeaderLastModified))
-			if err == nil && destt.Unix() >= srct.Unix() {
+		if _, err := cc.command.ossGetObjectStatRetry(destBucket, destObject); err == nil {
+			//destt, err := time.Parse(http.TimeFormat, props.Get(oss.HTTPHeaderLastModified))
+			//if err == nil && destt.Unix() >= srct.Unix() {
 				return true, nil
-			}
+			//}
 		}
 	} else {
 		if !cc.cpOption.force {
