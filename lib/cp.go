@@ -13,6 +13,7 @@ import (
 	oss "github.com/aliyun/aliyun-oss-go-sdk/oss"
 	leveldb "github.com/syndtr/goleveldb/leveldb"
 	//"container/list"
+	"log"
 )
 
 type operationType int
@@ -1625,9 +1626,10 @@ func (cc *CopyCommand) uploadFile(bucket *oss.Bucket, destURL CloudURL, file fil
 	}
 
 	srct := f.ModTime().Unix()
+	sname:=f.Name()
 	absPath, _ := filepath.Abs(filePath)
 	spath := cc.formatSnapshotKey(absPath, destURL.bucket, objectName)
-	if skip, rerr = cc.skipUpload(spath, bucket, objectName, destURL, srct); rerr != nil || skip {
+	if skip, rerr = cc.skipUpload(spath, bucket, objectName, destURL, srct,sname); rerr != nil || skip {
 		return
 	}
 
@@ -1679,7 +1681,7 @@ func (cc *CopyCommand) makeObjectName(destURL CloudURL, file fileInfoType) strin
 	return destURL.object
 }
 
-func (cc *CopyCommand) skipUpload(spath string, bucket *oss.Bucket, objectName string, destURL CloudURL, srct int64) (bool, error) {
+func (cc *CopyCommand) skipUpload(spath string, bucket *oss.Bucket, objectName string, destURL CloudURL, srct int64,sname string) (bool, error) {
 	if cc.cpOption.snapshotPath != "" || cc.cpOption.update {
 		if cc.cpOption.snapshotPath != "" {
 			tstr, err := cc.cpOption.snapshotldb.Get([]byte(spath), nil)
@@ -1692,9 +1694,13 @@ func (cc *CopyCommand) skipUpload(spath string, bucket *oss.Bucket, objectName s
 		}
 		if cc.cpOption.update {
 			if _, err := cc.command.ossGetObjectStatRetry(bucket, objectName); err == nil {
-				//destt, err := time.Parse(http.TimeFormat, props.Get(oss.HTTPHeaderLastModified))
-				//if err == nil && destt.Unix() >= srct {
-				return true, nil
+				//result:=strings.Split(objectName,"/")
+				//name:=result[len(result)-1]
+				if sname=="index.html"{
+					return false,nil
+				}
+				//if sname== name {
+					return true, nil
 				//}
 			}
 		}
@@ -1705,6 +1711,7 @@ func (cc *CopyCommand) skipUpload(spath string, bucket *oss.Bucket, objectName s
 			}
 		}
 	}
+	log.Println(sname)
 	return false, nil
 }
 
